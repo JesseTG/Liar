@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """The app module, containing the app factory function."""
 from flask import Flask, render_template
+from flask_pymongo import PyMongo
 
 from liar import commands, public
 from liar.assets import assets
-from liar.extensions import bcrypt, cache, csrf_protect, db, debug_toolbar, migrate
+from liar.extensions import bcrypt, cache, csrf_protect, debug_toolbar
 from liar.settings import ProdConfig
 
 
@@ -28,10 +29,8 @@ def register_extensions(app):
     assets.init_app(app)
     bcrypt.init_app(app)
     cache.init_app(app)
-    db.init_app(app)
     csrf_protect.init_app(app)
     debug_toolbar.init_app(app)
-    migrate.init_app(app, db)
     return None
 
 
