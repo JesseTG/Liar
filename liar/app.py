@@ -4,7 +4,7 @@ from flask import Flask, render_template
 
 from liar import commands, public
 from liar.assets import assets
-from liar.extensions import bcrypt, cache, csrf_protect, debug_toolbar, mongo
+from liar.extensions import cache, csrf_protect, debug_toolbar, mongo
 from liar.settings import ProdConfig
 
 
@@ -26,7 +26,6 @@ def create_app(config_object=ProdConfig):
 def register_extensions(app):
     """Register Flask extensions."""
     assets.init_app(app)
-    bcrypt.init_app(app)
     cache.init_app(app)
     csrf_protect.init_app(app)
     debug_toolbar.init_app(app)
