@@ -2,6 +2,9 @@
 """Application configuration."""
 import os
 
+SECONDS = 60
+HOURS = 60 * SECONDS
+DAYS = 24 * HOURS
 
 class Config(object):
     """Base configuration."""
@@ -13,7 +16,16 @@ class Config(object):
     DEBUG_TB_ENABLED = False  # Disable Debug toolbar
     DEBUG_TB_INTERCEPT_REDIRECTS = False
     CACHE_TYPE = 'simple'  # Can be "memcached", "redis", etc.
+    SCHEDULER_API_ENABLED = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    JOBS = [
+        {
+            'id': 'scrape-db',
+            'func': 'liar.commands:scrape',
+            'trigger': 'interval',
+            'seconds': 6 * HOURS
+        }
+    ]
 
 
 class ProdConfig(Config):
@@ -42,4 +54,5 @@ class TestConfig(Config):
 
     TESTING = True
     DEBUG = True
+    SCHEDULER_API_ENABLED = False
     WTF_CSRF_ENABLED = False  # Allows form testing
