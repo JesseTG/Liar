@@ -2,6 +2,7 @@ import string
 import re
 from concurrent.futures import ThreadPoolExecutor
 
+import click
 import pymongo
 import datefinder
 import requests
@@ -54,6 +55,7 @@ def get_all_article_urls(pages):
     return urls
 
 
+# These functions are here so that we don't dynamically instantiate lambdas
 def identity(x):
     return x
 
@@ -112,36 +114,32 @@ def get_and_scrape_article(url: str):
 
         return data
     except Exception as e:
-        print("{0}: {1}".format(type(e).__name__, e))
+        click.echo("{0}: {1}".format(type(e).__name__, e))
         return None
 
 
-def main():
-    print("Establishing MongoDB connection")
-    client = pymongo.MongoClient()
+def scrape(host, port, db):
+    client = pymongo.MongoClient() # TODO: Verify the connection is open before looking for articles
+    click.echo("Connected to mongodb://{0}:{1}/{2}".format(host, port, db))
+
     db = client.liar
     statements = db.statements
 
-    print("Getting list of articles")
+    click.echo("Getting list of articles")
     pages = get_all_pages()
-    print("{0} pages found".format(len(pages)))
+    click.echo("{0} pages found".format(len(pages)))
 
     urls = get_all_article_urls(pages)
 
     existing_urls = statements.distinct('_id')
-    print("{0} articles found, and {1} are already in the database".format(len(urls), len(existing_urls)))
+    click.echo("{0} articles found, and {1} are already in the database".format(len(urls), len(existing_urls)))
 
     urls.difference_update(existing_urls)
 
-    print("Scraping data")
+    click.echo("Scraping data")
     with ThreadPoolExecutor() as executor:
         for data in executor.map(get_and_scrape_article, urls):
             if data is not None:
                 statements.insert_one(data)
 
-    print("Done")
-
-
-def scrape(host, port, db):
-    print(host, port, db)
-    pass
+    click.echo("Done")
