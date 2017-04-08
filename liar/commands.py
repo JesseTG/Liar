@@ -124,3 +124,12 @@ def urls(url, order):
 
     for row in rows:
         click.echo(str_template.format(*row[:column_length]))
+
+
+@click.command()
+@click.option('--db', default="liar",
+              help='Name of the database within the Mongo instance to use')
+def scrape(db):
+    """Update the database
+    """
+    print("TODO")
