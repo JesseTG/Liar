@@ -44,3 +44,7 @@ docs/_build
 
 # Virtualenvs
 env/
+
+# MongoDB
+dump/
+*.bson
