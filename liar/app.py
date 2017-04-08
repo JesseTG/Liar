@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 """The app module, containing the app factory function."""
 from flask import Flask, render_template
-from flask_pymongo import PyMongo
 
 from liar import commands, public
 from liar.assets import assets
-from liar.extensions import bcrypt, cache, csrf_protect, debug_toolbar
+from liar.extensions import bcrypt, cache, csrf_protect, debug_toolbar, mongo
 from liar.settings import ProdConfig
 
 
@@ -31,6 +30,7 @@ def register_extensions(app):
     cache.init_app(app)
     csrf_protect.init_app(app)
     debug_toolbar.init_app(app)
+    mongo.init_app(app)
     return None
 
 
@@ -57,7 +57,7 @@ def register_shellcontext(app):
     def shell_context():
         """Shell context objects."""
         return {
-            'db': db}
+            'db': mongo}
 
     app.shell_context_processor(shell_context)
 

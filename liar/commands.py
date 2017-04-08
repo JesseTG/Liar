@@ -128,13 +128,8 @@ def urls(url, order):
 
 
 @click.command()
-@click.option('--host', default='localhost',
-              help='Address of the MongoDB instance to use')
-@click.option('--port', default=27017,
-              help='Port that the MongoDB instance at the host is reachable through')
-@click.option('--db', default="liar",
-              help='Name of the database within the Mongo instance to use')
-def scrape(host, port, db):
+@with_appcontext
+def scrape():
     """Update the database
     """
-    scraper.scrape(host=host, port=port, db=db)
+    scraper.scrape()

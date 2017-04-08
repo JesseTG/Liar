@@ -2,8 +2,9 @@ import string
 import re
 from concurrent.futures import ThreadPoolExecutor
 
+from liar.extensions import mongo
+
 import click
-import pymongo
 import datefinder
 import requests
 from bs4 import BeautifulSoup
@@ -118,11 +119,10 @@ def get_and_scrape_article(url: str):
         return None
 
 
-def scrape(host, port, db):
-    client = pymongo.MongoClient() # TODO: Verify the connection is open before looking for articles
+def scrape():
     click.echo("Connected to mongodb://{0}:{1}/{2}".format(host, port, db))
 
-    db = client.liar
+    db = mongo.db
     statements = db.statements
 
     click.echo("Getting list of articles")
