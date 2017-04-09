@@ -17,11 +17,12 @@ class Config(object):
     SECRET_KEY = os.environ.get('LIAR_SECRET', 'secret-key')  # TODO: Change me
     APP_DIR = os.path.abspath(os.path.dirname(__file__))  # This directory
     PROJECT_ROOT = os.path.abspath(os.path.join(APP_DIR, os.pardir))
+    PROPAGATE_EXCEPTIONS = True
     ASSETS_DEBUG = False
     DEBUG_TB_ENABLED = False  # Disable Debug toolbar
     DEBUG_TB_INTERCEPT_REDIRECTS = False
     CACHE_TYPE = 'simple'  # Can be "memcached", "redis", etc.
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    TEMPLATES_AUTO_RELOAD = True
     SCHEDULER_JOBSTORES = {
         'default': MemoryJobStore()
     }
@@ -58,6 +59,8 @@ class DevConfig(Config):
     DEBUG = True
 
     SCHEDULER_API_ENABLED = True
+    DEBUG_TB_PROFILER_ENABLED = True
+    DEBUG_TB_TEMPLATE_EDITOR_ENABLED = True
     DEBUG_TB_ENABLED = True
     ASSETS_DEBUG = True  # Don't bundle/minify static assets
     CACHE_TYPE = 'simple'  # Can be "memcached", "redis", etc.
