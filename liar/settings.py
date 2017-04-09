@@ -2,8 +2,13 @@
 """Application configuration."""
 import os
 
-SECONDS = 60
-HOURS = 60 * SECONDS
+from apscheduler.executors.pool import ThreadPoolExecutor
+from apscheduler.jobstores.memory import MemoryJobStore
+
+
+SECONDS = 1
+MINUTES = 60 * SECONDS
+HOURS = 60 * MINUTES
 DAYS = 24 * HOURS
 
 class Config(object):
@@ -16,16 +21,26 @@ class Config(object):
     DEBUG_TB_ENABLED = False  # Disable Debug toolbar
     DEBUG_TB_INTERCEPT_REDIRECTS = False
     CACHE_TYPE = 'simple'  # Can be "memcached", "redis", etc.
-    SCHEDULER_API_ENABLED = True
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SCHEDULER_JOBSTORES = {
+        'default': MemoryJobStore()
+    }
+    SCHEDULER_EXECUTORS = {
+    }
+    SCHEDULER_JOB_DEFAULTS = {
+        'coalesce': False,
+        'max_instances': 1
+    }
     JOBS = [
         {
             'id': 'scrape-db',
-            'func': 'liar.commands:scrape',
+            'func': 'liar.commands:scrape_noclick',
             'trigger': 'interval',
+            'args': (),
             'seconds': 6 * HOURS
         }
     ]
+
 
 
 class ProdConfig(Config):
@@ -41,6 +56,8 @@ class DevConfig(Config):
 
     ENV = 'dev'
     DEBUG = True
+
+    SCHEDULER_API_ENABLED = True
     DEBUG_TB_ENABLED = True
     ASSETS_DEBUG = True  # Don't bundle/minify static assets
     CACHE_TYPE = 'simple'  # Can be "memcached", "redis", etc.

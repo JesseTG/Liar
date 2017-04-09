@@ -2,13 +2,16 @@ import string
 import re
 from concurrent.futures import ThreadPoolExecutor
 
-from liar.extensions import mongo
+# TODO: Figure out why I can't use flask.current_app (I get an error about the context)
 
-import click
+import datetime
+import logging
 import datefinder
 import requests
 from bs4 import BeautifulSoup
 from bs4.diagnose import diagnose
+
+from liar.extensions import mongo
 
 PAGECOUNT_REGEX = re.compile(r"\s*Page \d+ of (?P<pages>\d+)")
 PUBLISHED_REGEX = re.compile(r"\s*Published:")
@@ -115,31 +118,32 @@ def get_and_scrape_article(url: str):
 
         return data
     except Exception as e:
-        click.echo("{0}: {1}".format(type(e).__name__, e))
+        # TODO: Even though this exception is caught, it crashes the app
+        print("{0}: {1}".format(type(e).__name__, e))
         return None
 
 
 def scrape():
-    click.echo("Connected to mongodb://{0}:{1}/{2}".format(host, port, db))
+    print("Starting the scraper")
 
     db = mongo.db
     statements = db.statements
 
-    click.echo("Getting list of articles")
+    print("Getting list of articles")
     pages = get_all_pages()
-    click.echo("{0} pages found".format(len(pages)))
+    print("{0} pages found".format(len(pages)))
 
     urls = get_all_article_urls(pages)
 
     existing_urls = statements.distinct('_id')
-    click.echo("{0} articles found, and {1} are already in the database".format(len(urls), len(existing_urls)))
+    print("{0} articles found, and {1} are already in the database".format(len(urls), len(existing_urls)))
 
     urls.difference_update(existing_urls)
 
-    click.echo("Scraping data")
+    print("Scraping data")
     with ThreadPoolExecutor() as executor:
         for data in executor.map(get_and_scrape_article, urls):
             if data is not None:
                 statements.insert_one(data)
 
-    click.echo("Done")
+    print("Done")

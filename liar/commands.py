@@ -5,10 +5,10 @@ from glob import glob
 from subprocess import call
 
 import click
-from flask import current_app
 from flask.cli import with_appcontext
 from werkzeug.exceptions import MethodNotAllowed, NotFound
 from . import scraper
+from .extensions import scheduler
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 PROJECT_ROOT = os.path.join(HERE, os.pardir)
@@ -133,3 +133,7 @@ def scrape():
     """Update the database
     """
     scraper.scrape()
+
+def scrape_noclick():
+    with scheduler.app.app_context():
+        scraper.scrape()
