@@ -118,7 +118,6 @@ def get_and_scrape_article(url: str):
 
         return data
     except Exception as e:
-        # TODO: Even though this exception is caught, it crashes the app
         print("{0}: {1}".format(type(e).__name__, e))
         return None
 
