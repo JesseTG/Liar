@@ -48,3 +48,6 @@ env/
 # MongoDB
 dump/
 *.bson
+
+# Vagrant
+.vagrant
