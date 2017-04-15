@@ -47,6 +47,8 @@ Vagrant.configure("2") do |config|
       virtualbox-guest-utils \
       xvfb \
 
+    service mongod start
+    cd /vagrant
     pip3 install -r requirements/dev.txt
   SHELL
 end
