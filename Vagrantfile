@@ -47,6 +47,6 @@ Vagrant.configure("2") do |config|
 
     service mongod start
     cd /vagrant
-    pip3 install -r requirements/dev.txt
+    pip3 install --requirement requirements/dev.txt
   SHELL
 end
