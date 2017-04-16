@@ -25,9 +25,11 @@ Vagrant.configure("2") do |config|
     apt-get install -qy \
       build-essential \
       coreutils \
+      curl \
       g++ \
       gcc-6 \
       git \
+      jq \
       lsb \
       lshw \
       lsof \
@@ -37,10 +39,11 @@ Vagrant.configure("2") do |config|
       patchutils \
       python3-pip \
       python3.6 \
+      silversearcher-ag \
       tree \
       virtualbox-guest-dkms \
       virtualbox-guest-utils \
-      xvfb \
+      wget \
 
     service mongod start
     cd /vagrant
