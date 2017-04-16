@@ -46,6 +46,11 @@ Vagrant.configure("2") do |config|
       virtualbox-guest-utils \
       wget \
 
+    echo "#!/bin/sh -e
+sudo service mongod start
+exit 0
+" > /etc/rc.local
+    chmod +x /etc/rc.local
     service mongod start
     cd /vagrant
     pip3 install --requirement requirements/dev.txt
