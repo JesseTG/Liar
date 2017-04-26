@@ -47,6 +47,7 @@ Vagrant.configure("2") do |config|
       virtualbox-guest-utils \
       wget \
 
+    echo "export FLASK_APP=/vagrant/autoapp.py" > /etc/profile.d/export-flask-app.sh
     echo "#!/bin/sh -e
 sudo service mongod start
 exit 0
