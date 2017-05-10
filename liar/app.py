@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 """The app module, containing the app factory function."""
+
+import math
+import logging
+
 from flask import Flask, render_template
 
 from liar import commands, public
@@ -21,6 +25,7 @@ def create_app(config_object=ProdConfig):
     register_errorhandlers(app)
     register_shellcontext(app)
     register_commands(app)
+    register_jinja(app)
 
     scheduler.start()
     return app
@@ -72,3 +77,15 @@ def register_commands(app):
     app.cli.add_command(commands.clean)
     app.cli.add_command(commands.urls)
     app.cli.add_command(commands.scrape)
+
+
+def register_jinja(app):
+    with app.app_context():
+        app.jinja_env.globals['db'] = mongo.db
+        app.jinja_env.globals['statements'] = mongo.db.statements
+
+        app.jinja_env.filters['sqrt'] = math.sqrt
+        app.jinja_env.filters['log10'] = math.log10
+        app.jinja_env.filters['log'] = math.log
+        app.jinja_env.filters['log1p'] = math.log1p
+        app.jinja_env.filters['log2'] = math.log2
