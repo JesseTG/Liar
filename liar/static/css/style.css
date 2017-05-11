@@ -40,6 +40,11 @@ circle.subject:hover {
   transform: scale(2, 2);
 }
 
+line.edge {
+  stroke-width: 1;
+  stroke: black;
+}
+
 .tooltip {
   color: red;
 }
