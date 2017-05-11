@@ -42,8 +42,7 @@ def get_num_pages():
     return int(match.group("pages"))
 
 
-def get_all_pages():
-    num_pages = get_num_pages()
+def get_all_pages(num_pages):
 
     urls = tuple(STATEMENTS_PAGE.format(i) for i in range(1, num_pages + 1))
 
@@ -124,7 +123,7 @@ def get_and_scrape_article(url: str):
         data["published_date"] = tuple(datefinder.find_dates(published_text.text))[0]
 
         subjects = aside.find_all(match_subjects)[0]
-        data["subjects"] = tuple(s.text.strip() for s in subjects.find_all('a') if s not in FILTERED_TOPICS)
+        data["subjects"] = tuple(s.text.strip() for s in subjects.find_all('a') if s.text.strip() not in FILTERED_TOPICS)
 
         sources = aside.find('div')
         data["sources"] = tuple(i for i in filter(identity, sources.text.splitlines())) # TODO: Fix
@@ -141,9 +140,11 @@ def scrape():
     db = mongo.db
     statements = db.statements
 
+    num_pages = get_num_pages()
+    print("{0} pages found".format(num_pages))
     print("Getting list of articles")
-    pages = get_all_pages()
-    print("{0} pages found".format(len(pages)))
+    pages = get_all_pages(num_pages)
+    print("Got all {0} pages, looking for articles".format(num_pages))
 
     urls = get_all_article_urls(pages)
 
