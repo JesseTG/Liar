@@ -159,7 +159,7 @@ def scrape():
                 statements.insert_one(data)
 
     print("Creating indexes")
-    statements.create_index([("subjects", DESCENDING)], background=True)
-    statements.create_index([("ruling", DESCENDING)], background=True)
+    statements.create_index([("subjects", ASCENDING)], background=True)
+    statements.create_index([("ruling", ASCENDING)], background=True)
     print("Created indexes")
     print("Done")
