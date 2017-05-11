@@ -115,18 +115,18 @@ def points():
             '$unwind': "$subjects2"
         },
         {
-          '$group': {
-            '_id': '$_id',
-            'pairs': {
-                "$addToSet": {
-                    "$cond": {
-                        "if": {'$gt': ["$subjects", "$subjects2"]},
-                        "then": ["$subjects2", "$subjects"],
-                        "else": ["$subjects", "$subjects2"]
+            '$group': {
+                '_id': '$_id',
+                'pairs': {
+                    "$addToSet": {
+                        "$cond": {
+                            "if": {'$gt': ["$subjects", "$subjects2"]},
+                            "then": ["$subjects2", "$subjects"],
+                            "else": ["$subjects", "$subjects2"]
+                        }
                     }
                 }
             }
-          }
         },
         {
             '$project': {
