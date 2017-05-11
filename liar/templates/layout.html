@@ -25,17 +25,22 @@
 
   </head>
   <body class="{% block body_class %}{% endblock %}">
+    <svg width="100%" height="100%" viewbox="{{ viewbox }}">
+    {% for n in nodes %}
+    {% set radius = (n.numberOfRulings|sqrt) %}
+    <circle cx="{{ points[loop.index0][0] }}" cy="{{ points[loop.index0][1] }}" r="{{ radius }}" title="{{ n._id }}" fill="{{ gradient(n.normalizedAverageRuling) }}" />
+    {% endfor %}
+    </svg>
+
     {% block body %}
-    {% with form=form  %}
-    {% include "nav.html" %}
-    {% endwith %}
-
-    <header>{% block header %}{% endblock %}</header>
-    {% block content %}{% endblock %}
-
-    {% include "footer.html" %}
 
     <!-- JavaScript at the bottom for fast page loading -->
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script src="https://d3js.org/d3-collection.v1.min.js"></script>
+    <script src="https://d3js.org/d3-dispatch.v1.min.js"></script>
+    <script src="https://d3js.org/d3-quadtree.v1.min.js"></script>
+    <script src="https://d3js.org/d3-timer.v1.min.js"></script>
+    <script src="https://d3js.org/d3-force.v1.min.js"></script>
     {% assets "js_all" %}
         <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}

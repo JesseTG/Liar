@@ -5,13 +5,18 @@
 /* universal */
 
 html {
-  overflow-y: scroll;
+  width:100%;
   height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
 }
 
 body {
-  padding-top: 60px;
-  height: 100%;
+  width:100%;
+  height:100%;
+  margin:0;
+  overflow: hidden;
 }
 
 section {

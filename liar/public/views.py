@@ -15,6 +15,8 @@ from sklearn import manifold
 from scipy.interpolate import interp1d
 from scipy.spatial.distance import squareform, pdist
 
+from numpy import amin, amax
+
 from colour import Color
 
 blueprint = Blueprint('public', __name__, static_folder='../static')
@@ -130,19 +132,20 @@ def points():
     mds = manifold.MDS(n_components=2, n_init=4, max_iter=300, eps=1e-6, dissimilarity="precomputed", n_jobs=-1)
     return scipy.array(mds.fit_transform(most - matrix))
 
-def edges():
-    pass
-
-def make_data(nodes, points):
-    pass
-
+def viewbox(points):
+    am = amax(points)
+    return "{0} {1} {2} {3}".format(-am, -am, am * 2, am * 2)
 
 
 @blueprint.route('/', methods=['GET'])
 #@cache.cached(timeout=10)
 def home():
+    n = nodes()
+    p = points()
+    v = viewbox(p)
+
     """Home page."""
-    return render_template('public/home.html', nodes=nodes(), points=points(), gradient=gradient)
+    return render_template('layout.html', nodes=n, points=p, viewbox=v, gradient=gradient)
 
 
 @blueprint.route('/about/')
