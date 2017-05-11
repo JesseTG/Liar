@@ -18,6 +18,7 @@ lxml>=3.7.3
 scipy>=0.19.0
 Flask-APScheduler>=1.7.0
 colour>=0.1.4
+python-slugify>=1.2.4
 
 # Forms
 Flask-WTF==0.14.2

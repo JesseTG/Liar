@@ -27,6 +27,28 @@ textarea {
   resize: vertical;
 }
 
+nav, header, footer {
+  position: fixed;
+}
+
+circle.subject {
+  transition: fill 0.5s, transform 0.5s;
+  transform-origin: center center;
+}
+
+circle.subject:hover {
+  transform: scale(2, 2);
+}
+
+.tooltip {
+  color: red;
+}
+
+header {
+  bottom: 0;
+  left: 0;
+}
+
 .container-narrow{
   margin: 0 auto;
   max-width: 700px;

@@ -15,7 +15,7 @@ from sklearn import manifold
 from scipy.interpolate import interp1d
 from scipy.spatial.distance import squareform, pdist
 
-from numpy import amin, amax
+from numpy import amax
 
 from colour import Color
 
@@ -33,8 +33,6 @@ def gradient(i):
 def nodes():
     statements = mongo.db.statements
     r = ["$PantsOnFire", "$False", "$MostlyFalse", "$HalfTrue", "$MostlyTrue", "$True"]
-    one = 1
-    zero = 0
     return statements.aggregate([
         {
             "$unwind": {
@@ -45,13 +43,13 @@ def nodes():
             "$group": {
                 "_id": "$subjects",
 
-                "PantsOnFire": {"$sum": { "$cond": [ { "$eq": [ "$ruling", "Pants on Fire!" ] }, one, zero ] } },
-                "False": {"$sum": { "$cond": [ { "$eq": [ "$ruling", "False" ] }, one, zero ] } },
-                "MostlyFalse": {"$sum": { "$cond": [ { "$eq": [ "$ruling", "Mostly False" ] }, one, zero ] } },
-                "HalfTrue": {"$sum": { "$cond": [ { "$eq": [ "$ruling", "Half-True" ] }, one, zero ] } },
-                "MostlyTrue": {"$sum": { "$cond": [ { "$eq": [ "$ruling", "Mostly True" ] }, one, zero ] } },
-                "True": {"$sum": { "$cond": [ { "$eq": [ "$ruling", "True" ] }, one, zero ] } },
-                "numberOfRulings": {"$sum": one}
+                "PantsOnFire": {"$sum": { "$cond": [ { "$eq": [ "$ruling", "Pants on Fire!" ] }, 1, 0 ] } },
+                "False": {"$sum": { "$cond": [ { "$eq": [ "$ruling", "False" ] }, 1, 0 ] } },
+                "MostlyFalse": {"$sum": { "$cond": [ { "$eq": [ "$ruling", "Mostly False" ] }, 1, 0 ] } },
+                "HalfTrue": {"$sum": { "$cond": [ { "$eq": [ "$ruling", "Half-True" ] }, 1, 0 ] } },
+                "MostlyTrue": {"$sum": { "$cond": [ { "$eq": [ "$ruling", "Mostly True" ] }, 1, 0 ] } },
+                "True": {"$sum": { "$cond": [ { "$eq": [ "$ruling", "True" ] }, 1, 0 ] } },
+                "numberOfRulings": {"$sum": 1}
             }
         },
         {
@@ -97,6 +95,38 @@ def points():
     statements = mongo.db.statements
     subjects = tuple(sorted(statements.distinct("subjects")))
     subjectLists = tuple(s["subjects"] for s in statements.find({}, {"subjects": True, "_id": False}))
+
+    # combos = tuple(statements.aggregate([
+    #     {
+    #         '$project': { "subjects": True }
+    #     },
+    #     {
+    #         '$addFields': { "subjects2" : "$subjects" }
+    #     },
+    #     {
+    #         '$unwind': "$subjects"
+    #     },
+    #     {
+    #         '$unwind': "$subjects2"
+    #     },
+    #     {
+    #       '$group': {
+    #         '_id': {
+    #             "$cond": {
+    #                 "if": {'$gt': ["$subjects", "$subjects2"]},
+    #                 "then": ["$subjects", "$subjects2"],
+    #                 "else": ["$subjects2", "$subjects"]
+    #             }
+    #         }
+    #       }
+    #     },
+    #     {
+    #         '$group': {
+    #             '_id': None,
+    #             'pairs': {'$push': "$_id"}
+    #         }
+    #     }
+    # ]))[0]
     combos = frozenset(itertools.chain.from_iterable(itertools.combinations(l, 2) for l in subjectLists))
 
     length = len(subjects)
@@ -111,7 +141,7 @@ def points():
             }).count()
 
     def radius(subject):
-        return math.sqrt(statements.count({"subjects": {"$in": [subject]}}))
+        return math.sqrt(statements.count({"subjects": {"$elemMatch": { "$eq": subject}}}))
 
     for i, j in combos:
         i_index = subjects.index(i)
@@ -120,32 +150,26 @@ def points():
         matrix[i_index, j_index] = common
         matrix[j_index, i_index] = common
 
-    for i in range(length):
-        i_radius = radius(subjects[i])
-        for j in range(length):
-            j_radius = radius(subjects[j])
-            matrix[i, j] += i_radius + j_radius
-            matrix[j, i] += i_radius + j_radius
-
     most = matrix.max()
 
-    mds = manifold.MDS(n_components=2, n_init=4, max_iter=300, eps=1e-6, dissimilarity="precomputed", n_jobs=-1)
+    mds = manifold.MDS(n_components=2, n_init=10, max_iter=1000, eps=1e-9, dissimilarity="precomputed", n_jobs=-1)
     return scipy.array(mds.fit_transform(most - matrix))
 
 def viewbox(points):
     am = amax(points)
-    return "{0} {1} {2} {3}".format(-am, -am, am * 2, am * 2)
+    margin = am * 0.05
+    return "{0} {1} {2} {3}".format(-am - margin, -am - margin, am*2 + margin, am*2 + margin)
 
 
 @blueprint.route('/', methods=['GET'])
 #@cache.cached(timeout=10)
 def home():
-    n = nodes()
+    n = tuple(nodes())
     p = points()
     v = viewbox(p)
 
     """Home page."""
-    return render_template('layout.html', nodes=n, points=p, viewbox=v, gradient=gradient)
+    return render_template('layout.html', nodes=n, points=p, viewbox=v, gradient=gradient, colors=COLORS)
 
 
 @blueprint.route('/about/')

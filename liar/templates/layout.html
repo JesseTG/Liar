@@ -17,6 +17,7 @@
     <meta name="viewport" content="width=device-width">
 
     <link rel="stylesheet" href="{{ url_for('static', filename='libs/font-awesome4/css/font-awesome.min.css') }}">
+
     {% assets "css_all" %}
       <link rel="stylesheet" href="{{ ASSET_URL }}">
     {% endassets %}
@@ -25,22 +26,65 @@
 
   </head>
   <body class="{% block body_class %}{% endblock %}">
-    <svg width="100%" height="100%" viewbox="{{ viewbox }}">
-    {% for n in nodes %}
-    {% set radius = (n.numberOfRulings|sqrt) %}
-    <circle cx="{{ points[loop.index0][0] }}" cy="{{ points[loop.index0][1] }}" r="{{ radius }}" title="{{ n._id }}" fill="{{ gradient(n.normalizedAverageRuling) }}" />
-    {% endfor %}
+    <svg  width="100%" height="100%" viewbox="{{ viewbox }}">
+      <defs>
+        {% for n in nodes %}
+          <radialGradient id="{{ n._id | slugify}}" xmlns:xlink="http://www.w3.org/1999/xlink" >
+            {# <stop id="default-liar" offset="0%" stop-color="{{ colors[0] }}" /> #}
+
+            {% for i in range(5) %}
+              <stop offset="{{ (((n.rulings[:i+1]|sum) / n.numberOfRulings) * 100) - 0.5 }}%" stop-color="{{ colors[i] }}" />
+              <stop offset="{{ (((n.rulings[:i+1]|sum) / n.numberOfRulings) * 100) + 0.5 }}%" stop-color="{{ colors[i] }}" />
+            {% endfor %}
+
+            <stop offset="100%" stop-color="{{ colors[5] }}" />
+          </radialGradient>
+        {% endfor %}
+      </defs>
+
+      {% for n in nodes %}
+        {% set radius = (n.numberOfRulings|sqrt) %}
+        <circle
+          class="subject"
+          data-subject="{{ n._id }}"
+          data-subjectslug="{{ n._id | slugify }}"
+          data-rulings="{{ n.rulings|join(',') }}"
+          data-targetx="{{ points[loop.index0][0] }}"
+          data-targety="{{ points[loop.index0][1] }}"
+          data-defaultfill="{{ gradient(n.normalizedAverageRuling) }}"
+          cx="0"
+          cy="0"
+          r="{{ radius }}"
+          title="{{ n._id }}"
+          fill="{{ gradient(n.normalizedAverageRuling) }}"
+          opacity="0"
+        />
+      {% endfor %}
     </svg>
 
     {% block body %}
 
+    <header>
+      <h1>Liar</h1>
+      <h2 class="small">Are Politicians Fireproof?</h2>
+    </header>
+    {% block content %}{% endblock %}
+
+    <footer>
+      <h1>About</h1>
+    </footer>
+
+
+
     <!-- JavaScript at the bottom for fast page loading -->
-    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script src="https://d3js.org/d3.v4.js"></script>
     <script src="https://d3js.org/d3-collection.v1.min.js"></script>
     <script src="https://d3js.org/d3-dispatch.v1.min.js"></script>
     <script src="https://d3js.org/d3-quadtree.v1.min.js"></script>
     <script src="https://d3js.org/d3-timer.v1.min.js"></script>
     <script src="https://d3js.org/d3-force.v1.min.js"></script>
+    <script src="https://d3js.org/d3-ease.v1.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.7.1/d3-tip.min.js"></script>
     {% assets "js_all" %}
         <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}

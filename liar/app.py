@@ -4,6 +4,7 @@
 import math
 import logging
 
+from slugify import slugify
 from flask import Flask, render_template
 
 from liar import commands, public
@@ -83,9 +84,11 @@ def register_jinja(app):
     with app.app_context():
         app.jinja_env.globals['db'] = mongo.db
         app.jinja_env.globals['statements'] = mongo.db.statements
+        app.jinja_env.globals['pi'] = math.pi
 
         app.jinja_env.filters['sqrt'] = math.sqrt
         app.jinja_env.filters['log10'] = math.log10
         app.jinja_env.filters['log'] = math.log
         app.jinja_env.filters['log1p'] = math.log1p
         app.jinja_env.filters['log2'] = math.log2
+        app.jinja_env.filters['slugify'] = slugify
