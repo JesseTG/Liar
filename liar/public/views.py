@@ -90,6 +90,7 @@ def nodes():
         }
     ])
 
+@cache.cached(timeout=300)
 def points():
     statements = mongo.db.statements
     subjects = tuple(sorted(statements.distinct("subjects")))
