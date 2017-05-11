@@ -33,7 +33,7 @@ def gradient(i):
     return Color(rgb=(red(i), green(i), blue(i)))
 
 @cache.cached(timeout=300)
-def points():
+def compute_points(combos):
     subjects = tuple(sorted(queries.subjects()))
 
     length = len(subjects)
@@ -42,7 +42,7 @@ def points():
     def radius(subject):
         return math.sqrt(queries.subjectMentions(subject))
 
-    for c in queries.combos():
+    for c in combos:
         _id = c['_id']
         count = c['count']
         i_index = subjects.index(_id[0])
@@ -60,16 +60,31 @@ def viewbox(points):
     margin = am * 0.05
     return "{0} {1} {2} {3}".format(-am - margin, -am - margin, am*2 + margin, am*2 + margin)
 
+def build_data(points):
+    nodes = tuple(queries.nodes())
+
+    assert len(nodes) == len(points)
+    # The MDS should provide one 2D point for each topic...
+
+    for i in range(len(nodes)):
+        node = nodes[i]
+        point = points[i]
+        node['x'] = point[0]
+        node['y'] = point[1]
+        node['radius'] = math.sqrt(node['numberOfRulings'])
+
+    return { n['_id'] : n for n in nodes}
 
 @blueprint.route('/', methods=['GET'])
 #@cache.cached(timeout=10)
 def home():
-    n = tuple(queries.nodes())
-    p = points()
-    v = viewbox(p)
+    combos = tuple(queries.combos())
+    points = compute_points(combos)
+    nodes = build_data(points)
+    v = viewbox(points)
 
     """Home page."""
-    return render_template('layout.html', nodes=n, points=p, viewbox=v, gradient=gradient, colors=COLORS)
+    return render_template('layout.html', nodes=nodes, edges=combos, viewbox=v, gradient=gradient, colors=COLORS)
 
 
 @blueprint.route('/about/')
