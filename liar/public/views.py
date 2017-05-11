@@ -28,7 +28,6 @@ blue = interp1d(interval, [c.blue for c in COLORS])
 def gradient(i):
     return Color(rgb=(red(i), green(i), blue(i)))
 
-@cache.cached(timeout=300)
 def nodes():
     statements = mongo.db.statements
     r = ["$PantsOnFire", "$False", "$MostlyFalse", "$HalfTrue", "$MostlyTrue", "$True"]
@@ -100,7 +99,6 @@ def points():
     length = len(subjects)
     matrix = scipy.zeros((length, length))
 
-    @cache.cached(timeout=10)
     def numberCommon(x, y):
         if x == y:
             return 0
@@ -109,7 +107,6 @@ def points():
                 '$and': [{'subjects': x}, {'subjects': y}]
             }).count()
 
-    @cache.cached(timeout=10)
     def radius(subject):
         return math.sqrt(statements.count({"subjects": {"$in": [subject]}}))
 
