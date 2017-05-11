@@ -2,6 +2,7 @@
 """Public section, including homepage and signup."""
 
 import itertools
+import math
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask import current_app
@@ -27,7 +28,7 @@ blue = interp1d(interval, [c.blue for c in COLORS])
 def gradient(i):
     return Color(rgb=(red(i), green(i), blue(i)))
 
-
+@cache.cached(timeout=300)
 def nodes():
     statements = mongo.db.statements
     r = ["$PantsOnFire", "$False", "$MostlyFalse", "$HalfTrue", "$MostlyTrue", "$True"]
@@ -99,6 +100,7 @@ def points():
     length = len(subjects)
     matrix = scipy.zeros((length, length))
 
+    @cache.cached(timeout=10)
     def numberCommon(x, y):
         if x == y:
             return 0
@@ -107,12 +109,23 @@ def points():
                 '$and': [{'subjects': x}, {'subjects': y}]
             }).count()
 
+    @cache.cached(timeout=10)
+    def radius(subject):
+        return math.sqrt(statements.count({"subjects": {"$in": [subject]}}))
+
     for i, j in combos:
         i_index = subjects.index(i)
         j_index = subjects.index(j)
         common = numberCommon(i, j)
         matrix[i_index, j_index] = common
         matrix[j_index, i_index] = common
+
+    for i in range(length):
+        i_radius = radius(subjects[i])
+        for j in range(length):
+            j_radius = radius(subjects[j])
+            matrix[i, j] += i_radius + j_radius
+            matrix[j, i] += i_radius + j_radius
 
     most = matrix.max()
 
