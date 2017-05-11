@@ -11,13 +11,28 @@ from liar.extensions import mongo, cache
 
 import scipy
 from sklearn import manifold
+from scipy.interpolate import interp1d
 from scipy.spatial.distance import squareform, pdist
 
+from colour import Color
+
 blueprint = Blueprint('public', __name__, static_folder='../static')
+
+COLORS = tuple(map(Color, ("#661a00", "#E71F28", "#EE9022", "#FFD503", "#C3D52D", "#83BF44")))
+interval = tuple(i/(len(COLORS) - 1) for i in range(len(COLORS)))
+red = interp1d(interval, [c.red for c in COLORS])
+green = interp1d(interval, [c.green for c in COLORS])
+blue = interp1d(interval, [c.blue for c in COLORS])
+
+def gradient(i):
+    return Color(rgb=(red(i), green(i), blue(i)))
 
 
 def nodes():
     statements = mongo.db.statements
+    r = ["$PantsOnFire", "$False", "$MostlyFalse", "$HalfTrue", "$MostlyTrue", "$True"]
+    one = 1
+    zero = 0
     return statements.aggregate([
         {
             "$unwind": {
@@ -27,11 +42,51 @@ def nodes():
         {
             "$group": {
                 "_id": "$subjects",
-                "count": {"$sum": 1}
+
+                "PantsOnFire": {"$sum": { "$cond": [ { "$eq": [ "$ruling", "Pants on Fire!" ] }, one, zero ] } },
+                "False": {"$sum": { "$cond": [ { "$eq": [ "$ruling", "False" ] }, one, zero ] } },
+                "MostlyFalse": {"$sum": { "$cond": [ { "$eq": [ "$ruling", "Mostly False" ] }, one, zero ] } },
+                "HalfTrue": {"$sum": { "$cond": [ { "$eq": [ "$ruling", "Half-True" ] }, one, zero ] } },
+                "MostlyTrue": {"$sum": { "$cond": [ { "$eq": [ "$ruling", "Mostly True" ] }, one, zero ] } },
+                "True": {"$sum": { "$cond": [ { "$eq": [ "$ruling", "True" ] }, one, zero ] } },
+                "numberOfRulings": {"$sum": one}
             }
         },
         {
-            "$sort": {"_id": 1}
+            "$project": {
+                "_id": True,
+                "rulings": r,
+                "numberOfRulings": True,
+                "averageRuling": {
+                    "$divide": [
+                        {
+                            "$sum": [
+                                {"$multiply": ["$PantsOnFire", 0]},
+                                {"$multiply": ["$False", 1]},
+                                {"$multiply": ["$MostlyFalse", 2]},
+                                {"$multiply": ["$HalfTrue", 3]},
+                                {"$multiply": ["$MostlyTrue", 4]},
+                                {"$multiply": ["$True", 5]}
+                            ]
+                        },
+                        "$numberOfRulings"
+                    ]
+                }
+            }
+        },
+        {
+            "$project": {
+                "_id": True,
+                "rulings": True,
+                "numberOfRulings": True,
+                "averageRuling": True,
+                "normalizedAverageRuling": {
+                    "$divide": ["$averageRuling", 5.0]
+                }
+            }
+        },
+        {
+            "$sort": { "_id": 1 }
         }
     ])
 
@@ -76,7 +131,7 @@ def make_data(nodes, points):
 #@cache.cached(timeout=10)
 def home():
     """Home page."""
-    return render_template('public/home.html', nodes=nodes(), points=points())
+    return render_template('public/home.html', nodes=nodes(), points=points(), gradient=gradient)
 
 
 @blueprint.route('/about/')
