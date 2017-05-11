@@ -8,7 +8,8 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask import current_app
 
 from liar.utils import flash_errors
-from liar.extensions import mongo, cache
+from liar.extensions import cache
+from .. import queries
 
 import scipy
 from sklearn import manifold
@@ -18,6 +19,7 @@ from scipy.spatial.distance import squareform, pdist
 from numpy import amax
 
 from colour import Color
+
 
 blueprint = Blueprint('public', __name__, static_folder='../static')
 
@@ -30,144 +32,17 @@ blue = interp1d(interval, [c.blue for c in COLORS])
 def gradient(i):
     return Color(rgb=(red(i), green(i), blue(i)))
 
-def nodes():
-    statements = mongo.db.statements
-    r = ["$PantsOnFire", "$False", "$MostlyFalse", "$HalfTrue", "$MostlyTrue", "$True"]
-    return statements.aggregate([
-        {
-            "$unwind": {
-                "path": "$subjects"
-            }
-        },
-        {
-            "$group": {
-                "_id": "$subjects",
-
-                "PantsOnFire": {"$sum": { "$cond": [ { "$eq": [ "$ruling", "Pants on Fire!" ] }, 1, 0 ] } },
-                "False": {"$sum": { "$cond": [ { "$eq": [ "$ruling", "False" ] }, 1, 0 ] } },
-                "MostlyFalse": {"$sum": { "$cond": [ { "$eq": [ "$ruling", "Mostly False" ] }, 1, 0 ] } },
-                "HalfTrue": {"$sum": { "$cond": [ { "$eq": [ "$ruling", "Half-True" ] }, 1, 0 ] } },
-                "MostlyTrue": {"$sum": { "$cond": [ { "$eq": [ "$ruling", "Mostly True" ] }, 1, 0 ] } },
-                "True": {"$sum": { "$cond": [ { "$eq": [ "$ruling", "True" ] }, 1, 0 ] } },
-                "numberOfRulings": {"$sum": 1}
-            }
-        },
-        {
-            "$project": {
-                "_id": True,
-                "rulings": r,
-                "numberOfRulings": True,
-                "averageRuling": {
-                    "$divide": [
-                        {
-                            "$sum": [
-                                {"$multiply": ["$PantsOnFire", 0]},
-                                {"$multiply": ["$False", 1]},
-                                {"$multiply": ["$MostlyFalse", 2]},
-                                {"$multiply": ["$HalfTrue", 3]},
-                                {"$multiply": ["$MostlyTrue", 4]},
-                                {"$multiply": ["$True", 5]}
-                            ]
-                        },
-                        "$numberOfRulings"
-                    ]
-                }
-            }
-        },
-        {
-            "$project": {
-                "_id": True,
-                "rulings": True,
-                "numberOfRulings": True,
-                "averageRuling": True,
-                "normalizedAverageRuling": {
-                    "$divide": ["$averageRuling", 5.0]
-                }
-            }
-        },
-        {
-            "$sort": { "_id": 1 }
-        }
-    ])
-
 @cache.cached(timeout=300)
 def points():
-    statements = mongo.db.statements
-    subjects = tuple(sorted(statements.distinct("subjects")))
+    subjects = tuple(sorted(queries.subjects()))
 
     length = len(subjects)
     matrix = scipy.zeros((length, length))
 
     def radius(subject):
-        return math.sqrt(statements.count({"subjects": {"$elemMatch": { "$eq": subject}}}))
+        return math.sqrt(queries.subjectMentions(subject))
 
-    combos = tuple(statements.aggregate([
-        {
-            '$project': { "subjects": True }
-        },
-        {
-            '$addFields': { "subjects2" : "$subjects" }
-        },
-        {
-            '$unwind': "$subjects"
-        },
-        {
-            '$unwind': "$subjects2"
-        },
-        {
-            '$group': {
-                '_id': '$_id',
-                'pairs': {
-                    "$addToSet": {
-                        "$cond": {
-                            "if": {'$gt': ["$subjects", "$subjects2"]},
-                            "then": ["$subjects2", "$subjects"],
-                            "else": ["$subjects", "$subjects2"]
-                        }
-                    }
-                }
-            }
-        },
-        {
-            '$project': {
-                '_id': True,
-                'pairs': {
-                    '$filter': {
-                        'input': "$pairs",
-                        'as': "pair",
-                        'cond': {
-                            '$ne': [
-                                {
-                                    '$arrayElemAt': ["$$pair", 0]
-                                },
-                                {
-                                    '$arrayElemAt': ["$$pair", 1]
-                                }
-                            ]
-                        }
-                    }
-                }
-            }
-        },
-        {
-            '$match': {
-                'pairs': {
-                    '$ne': []
-                }
-            }
-        },
-        {
-            '$unwind': "$pairs"
-        },
-        {
-            '$group': {
-                '_id': "$pairs",
-                'count': { '$sum': 1 }
-            }
-        }
-    ]))
-
-    for c in combos:
+    for c in queries.combos():
         _id = c['_id']
         count = c['count']
         i_index = subjects.index(_id[0])
@@ -189,7 +64,7 @@ def viewbox(points):
 @blueprint.route('/', methods=['GET'])
 #@cache.cached(timeout=10)
 def home():
-    n = tuple(nodes())
+    n = tuple(queries.nodes())
     p = points()
     v = viewbox(p)
 
