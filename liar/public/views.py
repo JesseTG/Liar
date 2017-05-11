@@ -94,61 +94,86 @@ def nodes():
 def points():
     statements = mongo.db.statements
     subjects = tuple(sorted(statements.distinct("subjects")))
-    subjectLists = tuple(s["subjects"] for s in statements.find({}, {"subjects": True, "_id": False}))
-
-    # combos = tuple(statements.aggregate([
-    #     {
-    #         '$project': { "subjects": True }
-    #     },
-    #     {
-    #         '$addFields': { "subjects2" : "$subjects" }
-    #     },
-    #     {
-    #         '$unwind': "$subjects"
-    #     },
-    #     {
-    #         '$unwind': "$subjects2"
-    #     },
-    #     {
-    #       '$group': {
-    #         '_id': {
-    #             "$cond": {
-    #                 "if": {'$gt': ["$subjects", "$subjects2"]},
-    #                 "then": ["$subjects", "$subjects2"],
-    #                 "else": ["$subjects2", "$subjects"]
-    #             }
-    #         }
-    #       }
-    #     },
-    #     {
-    #         '$group': {
-    #             '_id': None,
-    #             'pairs': {'$push': "$_id"}
-    #         }
-    #     }
-    # ]))[0]
-    combos = frozenset(itertools.chain.from_iterable(itertools.combinations(l, 2) for l in subjectLists))
 
     length = len(subjects)
     matrix = scipy.zeros((length, length))
 
-    def numberCommon(x, y):
-        if x == y:
-            return 0
-        else:
-            return statements.find({
-                '$and': [{'subjects': x}, {'subjects': y}]
-            }).count()
-
     def radius(subject):
         return math.sqrt(statements.count({"subjects": {"$elemMatch": { "$eq": subject}}}))
 
-    for i, j in combos:
-        i_index = subjects.index(i)
-        j_index = subjects.index(j)
-        common = numberCommon(i, j)
-        matrix[i_index, j_index] = common
-        matrix[j_index, i_index] = common
+    combos = tuple(statements.aggregate([
+        {
+            '$project': { "subjects": True }
+        },
+        {
+            '$addFields': { "subjects2" : "$subjects" }
+        },
+        {
+            '$unwind': "$subjects"
+        },
+        {
+            '$unwind': "$subjects2"
+        },
+        {
+          '$group': {
+            '_id': '$_id',
+            'pairs': {
+                "$addToSet": {
+                    "$cond": {
+                        "if": {'$gt': ["$subjects", "$subjects2"]},
+                        "then": ["$subjects2", "$subjects"],
+                        "else": ["$subjects", "$subjects2"]
+                    }
+                }
+            }
+          }
+        },
+        {
+            '$project': {
+                '_id': True,
+                'pairs': {
+                    '$filter': {
+                        'input': "$pairs",
+                        'as': "pair",
+                        'cond': {
+                            '$ne': [
+                                {
+                                    '$arrayElemAt': ["$$pair", 0]
+                                },
+                                {
+                                    '$arrayElemAt': ["$$pair", 1]
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        {
+            '$match': {
+                'pairs': {
+                    '$ne': []
+                }
+            }
+        },
+        {
+            '$unwind': "$pairs"
+        },
+        {
+            '$group': {
+                '_id': "$pairs",
+                'count': { '$sum': 1 }
+            }
+        }
+    ]))
+
+    for c in combos:
+        _id = c['_id']
+        count = c['count']
+        i_index = subjects.index(_id[0])
+        j_index = subjects.index(_id[1])
+        matrix[i_index, j_index] = count
+        matrix[j_index, i_index] = count
 
     most = matrix.max()
 
