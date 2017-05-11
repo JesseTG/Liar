@@ -29,12 +29,13 @@
     <svg  width="100%" height="100%" viewbox="{{ viewbox }}">
       <defs>
         {% for n in nodes %}
-          <radialGradient id="{{ n._id | slugify}}" xmlns:xlink="http://www.w3.org/1999/xlink" >
+          {% set node = nodes[n] %}
+          <radialGradient id="{{ n | slugify}}" xmlns:xlink="http://www.w3.org/1999/xlink" >
             {# <stop id="default-liar" offset="0%" stop-color="{{ colors[0] }}" /> #}
 
             {% for i in range(5) %}
-              <stop offset="{{ (((n.rulings[:i+1]|sum) / n.numberOfRulings) * 100) - 0.5 }}%" stop-color="{{ colors[i] }}" />
-              <stop offset="{{ (((n.rulings[:i+1]|sum) / n.numberOfRulings) * 100) + 0.5 }}%" stop-color="{{ colors[i] }}" />
+              <stop offset="{{ (((node.rulings[:i+1]|sum) / node.numberOfRulings) * 100) - 0.5 }}%" stop-color="{{ colors[i] }}" />
+              <stop offset="{{ (((node.rulings[:i+1]|sum) / node.numberOfRulings) * 100) + 0.5 }}%" stop-color="{{ colors[i] }}" />
             {% endfor %}
 
             <stop offset="100%" stop-color="{{ colors[5] }}" />
@@ -42,24 +43,41 @@
         {% endfor %}
       </defs>
 
+      {% for e in edges %}
+        {% set a = nodes[e._id[0]] %}
+        {% set b = nodes[e._id[1]] %}
+
+        <line
+          class="edge"
+          data-subjecta="{{ e._id[0] }}"
+          data-subjectb="{{ e._id[1] }}"
+          x1="{{ a.x }}"
+          y1="{{ a.y }}"
+          x2="{{ b.x }}"
+          y2="{{ b.y }}"
+        />
+      {% endfor %}
+
       {% for n in nodes %}
-        {% set radius = (n.numberOfRulings|sqrt) %}
+        {% set node = nodes[n] %}
         <circle
           class="subject"
-          data-subject="{{ n._id }}"
-          data-subjectslug="{{ n._id | slugify }}"
-          data-rulings="{{ n.rulings|join(',') }}"
-          data-targetx="{{ points[loop.index0][0] }}"
-          data-targety="{{ points[loop.index0][1] }}"
-          data-defaultfill="{{ gradient(n.normalizedAverageRuling) }}"
+          data-subject="{{ n }}"
+          data-subjectslug="{{ n | slugify }}"
+          data-rulings="{{ node.rulings|join(',') }}"
+          data-targetx="{{ node.x }}"
+          data-targety="{{ node.y }}"
+          data-defaultfill="{{ gradient(node.normalizedAverageRuling) }}"
           cx="0"
           cy="0"
-          r="{{ radius }}"
-          title="{{ n._id }}"
-          fill="{{ gradient(n.normalizedAverageRuling) }}"
+          r="{{ node.radius }}"
+          title="{{ n }}"
+          fill="{{ gradient(node.normalizedAverageRuling) }}"
           opacity="0"
         />
       {% endfor %}
+
+
     </svg>
 
     {% block body %}
