@@ -8,6 +8,8 @@ import datetime
 import logging
 import datefinder
 import requests
+
+from pymongo import IndexModel, ASCENDING, DESCENDING
 from bs4 import BeautifulSoup
 from bs4.diagnose import diagnose
 
@@ -145,4 +147,8 @@ def scrape():
             if data is not None:
                 statements.insert_one(data)
 
+    print("Creating indexes")
+    statements.create_index([("subjects", DESCENDING)], background=True)
+    statements.create_index([("ruling", DESCENDING)], background=True)
+    print("Created indexes")
     print("Done")
