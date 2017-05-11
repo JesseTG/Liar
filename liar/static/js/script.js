@@ -1,5 +1,4 @@
-(function($, window) {
-
-
-
-}).call(this, jQuery, window);
+(function ready(fn) {
+  window.addEventListener('load', fn);
+})(function() {
+});
