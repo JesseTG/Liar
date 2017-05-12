@@ -34,7 +34,7 @@ def gradient(i):
 
 @cache.cached(timeout=300)
 def compute_points(combos):
-    subjects = tuple(sorted(queries.subjects()))
+    subjects = tuple(sorted(tuple(queries.subjects())))
 
     length = len(subjects)
     matrix = scipy.zeros((length, length))
@@ -54,6 +54,7 @@ def compute_points(combos):
 
     mds = manifold.MDS(n_components=2, n_init=10, max_iter=1000, eps=1e-9, dissimilarity="precomputed", n_jobs=-1)
     return scipy.array(mds.fit_transform(most - matrix))
+
 
 def viewbox(points):
     am = amax(points)
@@ -75,16 +76,34 @@ def build_data(points):
 
     return { n['_id'] : n for n in nodes}
 
+def compute_edges(nodes, combos):
+    def make_edge(combo):
+        return {
+            'a': nodes[combo['_id'][0]],
+            'b': nodes[combo['_id'][1]],
+            'count': combo['count']
+        }
+
+    def allow_edge(edge):
+        a = edge['a']
+        b = edge['b']
+        count = edge['count']
+
+        return (count / a['numberOfRulings'] >= 0.05) or (count / b['numberOfRulings'] >= 0.05)
+
+    return tuple(e for e in map(make_edge, combos) if allow_edge(e))
+
 @blueprint.route('/', methods=['GET'])
 #@cache.cached(timeout=10)
 def home():
     combos = tuple(queries.combos())
     points = compute_points(combos)
     nodes = build_data(points)
+    edges = compute_edges(nodes, combos)
     v = viewbox(points)
 
     """Home page."""
-    return render_template('layout.html', nodes=nodes, edges=combos, viewbox=v, gradient=gradient, colors=COLORS)
+    return render_template('layout.html', nodes=nodes, edges=edges, viewbox=v, gradient=gradient, colors=COLORS)
 
 
 @blueprint.route('/about/')

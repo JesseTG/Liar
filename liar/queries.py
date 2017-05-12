@@ -62,7 +62,7 @@ def nodes():
 
 
 def combos():
-    return mongo.db.statements.aggregate([
+    return tuple(mongo.db.statements.aggregate([
         {
             '$project': { "subjects": True }
         },
@@ -126,7 +126,7 @@ def combos():
                 'count': { '$sum': 1 }
             }
         }
-    ])
+    ]))
 
 
 def subjects():

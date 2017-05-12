@@ -7,10 +7,10 @@ INVALID_URLS = (
 # These topics are too specific or localized (like to a special event). The statement itself
 # may be valid but this topic should not affect the data.
 FILTERED_TOPICS = (
-    "New Hampshire 2012",
+#    "New Hampshire 2012",
     "PolitiFact's Top Promises",
-    "This Week - ABC News",
+#    "This Week - ABC News",
     "The Colbert Report",
     "Tampa Bay 10 News",
-    "Corrections and Updates",
+    "Corrections and Updates"
 )

@@ -44,36 +44,32 @@
       </defs>
 
       {% for e in edges %}
-        {% set a = nodes[e._id[0]] %}
-        {% set b = nodes[e._id[1]] %}
-
         <line
-          class="edge"
-          data-subjecta="{{ e._id[0] }}"
-          data-subjectb="{{ e._id[1] }}"
-          x1="{{ a.x }}"
-          y1="{{ a.y }}"
-          x2="{{ b.x }}"
-          y2="{{ b.y }}"
+          id="edge-{{ e.a._id | slugify }}-{{ e.b._id | slugify }}"
+          class="edge {{e.a._id | slugify}} {{ e.b._id | slugify }}"
+          data-subjecta="{{ e.a._id }}"
+          data-subjectb="{{ e.b._id }}"
+          x1="{{ e.a.x }}"
+          y1="{{ e.a.y }}"
+          x2="{{ e.b.x }}"
+          y2="{{ e.b.y }}"
         />
       {% endfor %}
 
       {% for n in nodes %}
         {% set node = nodes[n] %}
         <circle
-          class="subject"
+          id="node-{{ n | slugify }}"
+          class="subject {{n | slugify}}"
           data-subject="{{ n }}"
           data-subjectslug="{{ n | slugify }}"
           data-rulings="{{ node.rulings|join(',') }}"
-          data-targetx="{{ node.x }}"
-          data-targety="{{ node.y }}"
+          cx="{{ node.x }}"
+          cy="{{ node.y }}"
           data-defaultfill="{{ gradient(node.normalizedAverageRuling) }}"
-          cx="0"
-          cy="0"
           r="{{ node.radius }}"
           title="{{ n }}"
           fill="{{ gradient(node.normalizedAverageRuling) }}"
-          opacity="0"
         />
       {% endfor %}
 
