@@ -8,10 +8,13 @@ import datetime
 import logging
 import datefinder
 import requests
+
+from pymongo import IndexModel, ASCENDING, DESCENDING
 from bs4 import BeautifulSoup
 from bs4.diagnose import diagnose
 
 from liar.extensions import mongo
+from .special_cases import INVALID_URLS, FILTERED_TOPICS
 
 PAGECOUNT_REGEX = re.compile(r"\s*Page \d+ of (?P<pages>\d+)")
 PUBLISHED_REGEX = re.compile(r"\s*Published:")
@@ -19,6 +22,8 @@ SUBJECTS_REGEX = re.compile(r"\s*Subjects:")
 STATEMENTS_PAGE = "http://www.politifact.com/truth-o-meter/statements/?page={0}"
 STRIPPED_CHARS = string.whitespace + "\"\'"
 BASEURL = "http://www.politifact.com{0}"
+RULING_TYPES = ["Pants on Fire!", "False", "Mostly False", "Half-True", "Mostly True", "True"]
+
 
 def get_page(number):
     response = requests.get(STATEMENTS_PAGE.format(number))
@@ -37,8 +42,7 @@ def get_num_pages():
     return int(match.group("pages"))
 
 
-def get_all_pages():
-    num_pages = get_num_pages()
+def get_all_pages(num_pages):
 
     urls = tuple(STATEMENTS_PAGE.format(i) for i in range(1, num_pages + 1))
 
@@ -89,8 +93,16 @@ def get_and_scrape_article(url: str):
 
         data = {"_id": url}
 
+        if url in INVALID_URLS:
+            # If this is one of the URLs that are known to be meaningless articles...
+            return None
+
         ruling = statement.find("img", class_="statement-detail")
         data["ruling"] = ruling["alt"].strip(STRIPPED_CHARS)
+
+        if data["ruling"] not in RULING_TYPES:
+            # If this isn't a fact-check article... (no flip-flops allowed)
+            return None
 
         statement_text = statement.select_one(".statement__text")
         data["statement"] = statement_text.text.strip(STRIPPED_CHARS)
@@ -111,7 +123,7 @@ def get_and_scrape_article(url: str):
         data["published_date"] = tuple(datefinder.find_dates(published_text.text))[0]
 
         subjects = aside.find_all(match_subjects)[0]
-        data["subjects"] = tuple(map(lambda s: s.text.strip(), subjects.find_all('a')))
+        data["subjects"] = tuple(s.text.strip() for s in subjects.find_all('a') if s.text.strip() not in FILTERED_TOPICS)
 
         sources = aside.find('div')
         data["sources"] = tuple(i for i in filter(identity, sources.text.splitlines())) # TODO: Fix
@@ -128,9 +140,11 @@ def scrape():
     db = mongo.db
     statements = db.statements
 
+    num_pages = get_num_pages()
+    print("{0} pages found".format(num_pages))
     print("Getting list of articles")
-    pages = get_all_pages()
-    print("{0} pages found".format(len(pages)))
+    pages = get_all_pages(num_pages)
+    print("Got all {0} pages, looking for articles".format(num_pages))
 
     urls = get_all_article_urls(pages)
 
@@ -145,4 +159,8 @@ def scrape():
             if data is not None:
                 statements.insert_one(data)
 
+    print("Creating indexes")
+    statements.create_index([("subjects", ASCENDING)], background=True)
+    statements.create_index([("ruling", ASCENDING)], background=True)
+    print("Created indexes")
     print("Done")
