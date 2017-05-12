@@ -39,9 +39,6 @@ def compute_points(combos):
     length = len(subjects)
     matrix = scipy.zeros((length, length))
 
-    def radius(subject):
-        return math.sqrt(queries.subjectMentions(subject))
-
     for c in combos:
         _id = c['_id']
         count = c['count']
@@ -91,7 +88,7 @@ def compute_edges(nodes, combos):
 
         return (count / a['numberOfRulings'] >= 0.05) or (count / b['numberOfRulings'] >= 0.05)
 
-    return tuple(e for e in map(make_edge, combos) if allow_edge(e))
+    return tuple(e for e in map(make_edge, combos))
 
 @blueprint.route('/', methods=['GET'])
 #@cache.cached(timeout=10)
@@ -103,7 +100,7 @@ def home():
     v = viewbox(points)
 
     """Home page."""
-    return render_template('layout.html', nodes=nodes, edges=edges, viewbox=v, gradient=gradient, colors=COLORS)
+    return render_template('public/home.html', nodes=nodes, edges=edges, viewbox=v, gradient=gradient, colors=COLORS)
 
 
 @blueprint.route('/about/')

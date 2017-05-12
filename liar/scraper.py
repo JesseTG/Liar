@@ -14,7 +14,7 @@ from bs4 import BeautifulSoup
 from bs4.diagnose import diagnose
 
 from liar.extensions import mongo
-from .special_cases import INVALID_URLS, FILTERED_TOPICS
+from .special_cases import *
 
 PAGECOUNT_REGEX = re.compile(r"\s*Page \d+ of (?P<pages>\d+)")
 PUBLISHED_REGEX = re.compile(r"\s*Published:")
@@ -123,7 +123,17 @@ def get_and_scrape_article(url: str):
         data["published_date"] = tuple(datefinder.find_dates(published_text.text))[0]
 
         subjects = aside.find_all(match_subjects)[0]
-        data["subjects"] = tuple(s.text.strip() for s in subjects.find_all('a') if s.text.strip() not in FILTERED_TOPICS)
+        subject_set = set()
+        for s in subjects.find_all('a'):
+            text = s.text.strip()
+            if text in COLLAPSED_SUBJECTS:
+                # If this is one of the subjects that we've merged together...
+                text = COLLAPSED_SUBJECTS[text]
+
+            if text not in FILTERED_TOPICS:
+                subject_set.add(text)
+
+        data["subjects"] = sorted(subject_set)
 
         sources = aside.find('div')
         data["sources"] = tuple(i for i in filter(identity, sources.text.splitlines())) # TODO: Fix

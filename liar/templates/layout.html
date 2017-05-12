@@ -26,55 +26,7 @@
 
   </head>
   <body class="{% block body_class %}{% endblock %}">
-    <svg  width="100%" height="100%" viewbox="{{ viewbox }}">
-      <defs>
-        {% for n in nodes %}
-          {% set node = nodes[n] %}
-          <radialGradient id="{{ n | slugify}}" xmlns:xlink="http://www.w3.org/1999/xlink" >
-            {# <stop id="default-liar" offset="0%" stop-color="{{ colors[0] }}" /> #}
-
-            {% for i in range(5) %}
-              <stop offset="{{ (((node.rulings[:i+1]|sum) / node.numberOfRulings) * 100) - 0.5 }}%" stop-color="{{ colors[i] }}" />
-              <stop offset="{{ (((node.rulings[:i+1]|sum) / node.numberOfRulings) * 100) + 0.5 }}%" stop-color="{{ colors[i] }}" />
-            {% endfor %}
-
-            <stop offset="100%" stop-color="{{ colors[5] }}" />
-          </radialGradient>
-        {% endfor %}
-      </defs>
-
-      {% for e in edges %}
-        <line
-          id="edge-{{ e.a._id | slugify }}-{{ e.b._id | slugify }}"
-          class="edge {{e.a._id | slugify}} {{ e.b._id | slugify }}"
-          data-subjecta="{{ e.a._id }}"
-          data-subjectb="{{ e.b._id }}"
-          x1="{{ e.a.x }}"
-          y1="{{ e.a.y }}"
-          x2="{{ e.b.x }}"
-          y2="{{ e.b.y }}"
-        />
-      {% endfor %}
-
-      {% for n in nodes %}
-        {% set node = nodes[n] %}
-        <circle
-          id="node-{{ n | slugify }}"
-          class="subject {{n | slugify}}"
-          data-subject="{{ n }}"
-          data-subjectslug="{{ n | slugify }}"
-          data-rulings="{{ node.rulings|join(',') }}"
-          cx="{{ node.x }}"
-          cy="{{ node.y }}"
-          data-defaultfill="{{ gradient(node.normalizedAverageRuling) }}"
-          r="{{ node.radius }}"
-          title="{{ n }}"
-          fill="{{ gradient(node.normalizedAverageRuling) }}"
-        />
-      {% endfor %}
-
-
-    </svg>
+    {{ content }}
 
     {% block body %}
 
@@ -85,7 +37,21 @@
     {% block content %}{% endblock %}
 
     <footer>
-      <h1>About</h1>
+      <ul>
+        <li>
+          Each circle is a topic on <a href="http://www.politifact.com" rel="external" target="_blank">Politifact</a>.
+        </li>
+        <li>
+          The bigger the circle, the more it's talked about.
+        </li>
+        <li>
+          The more red in the circle when you more over it, the more it's lied about.
+        </li>
+      </ul>
+
+      <p>
+        &copy; 2017 Jesse Talavera-Greenberg and Sharang Bhat
+      </p>
     </footer>
 
 
@@ -99,6 +65,7 @@
     <script src="https://d3js.org/d3-force.v1.min.js"></script>
     <script src="https://d3js.org/d3-ease.v1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.7.1/d3-tip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-cloud/1.2.4/d3.layout.cloud.min.js"></script>
     {% assets "js_all" %}
         <script type="text/javascript" src="{{ ASSET_URL }}"></script>
     {% endassets %}
