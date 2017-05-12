@@ -1,17 +1,24 @@
 # -*- coding: utf-8 -*-
 """Public section, including homepage and signup."""
 
+from collections import Counter, defaultdict
+import operator
+import re
 import itertools
 import math
 
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask import current_app
 
+from nltk.corpus import stopwords
+import nltk
+
 from liar.utils import flash_errors
 from liar.extensions import cache
 from .. import queries
 
 import scipy
+import pandas as pd
 from sklearn import manifold
 from scipy.interpolate import interp1d
 from scipy.spatial.distance import squareform, pdist
@@ -21,6 +28,31 @@ from numpy import amax
 from colour import Color
 
 
+def take(n, iterable):
+    "Return first n items of the iterable as a list"
+    return list(islice(iterable, n))
+
+
+gag_list=["EX","RP","TO","VB","WP","PRP","DT","VBP","IN","POS",".","CD","``"]
+
+def split_sentence(text):
+    sentence=nltk.word_tokenize(text)
+    tagged = nltk.pos_tag(sentence)
+    tagged=[tag for tag in tagged if tag[1] not in gag_list]
+    pass_list=[tag[0] for tag in tagged]
+    return pass_list
+
+
+
+
+def gen_dict(statement_text):
+    words=[split_sentence(sentence) for sentence in statement_text]
+    word_dict=defaultdict(int)
+    for word_list in words:
+        temp_dict=dict(Counter(word_list))
+        word_dict={**word_dict,**temp_dict}
+    return word_dict
+
 blueprint = Blueprint('public', __name__, static_folder='../static')
 
 COLORS = tuple(map(Color, ("#661a00", "#E71F28", "#EE9022", "#FFD503", "#C3D52D", "#83BF44")))
@@ -28,6 +60,7 @@ interval = tuple(i/(len(COLORS) - 1) for i in range(len(COLORS)))
 red = interp1d(interval, [c.red for c in COLORS])
 green = interp1d(interval, [c.green for c in COLORS])
 blue = interp1d(interval, [c.blue for c in COLORS])
+
 
 def gradient(i):
     return Color(rgb=(red(i), green(i), blue(i)))
@@ -71,6 +104,19 @@ def build_data(points):
         node['y'] = point[1]
         node['radius'] = math.sqrt(node['numberOfRulings'])
 
+
+#######################Word cloud#####################
+def word_cloud():
+    statements=mongo.db.statements
+    statement_text=statements_df['statement'].tolist()
+    wordcount=defaultdict(int)
+    word_dict=gen_dict(statement_text)
+    word_dict=dict(sorted(word_dict.items(), key=operator.itemgetter(1), reverse=True)[:100])
+    return word_cloud
+#####################################################
+
+
+
     return { n['_id'] : n for n in nodes}
 
 def compute_edges(nodes, combos):
@@ -89,6 +135,7 @@ def compute_edges(nodes, combos):
         return (count / a['numberOfRulings'] >= 0.05) or (count / b['numberOfRulings'] >= 0.05)
 
     return tuple(e for e in map(make_edge, combos))
+
 
 @blueprint.route('/', methods=['GET'])
 #@cache.cached(timeout=10)
