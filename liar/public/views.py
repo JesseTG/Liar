@@ -13,7 +13,41 @@ import scipy
 from sklearn import manifold
 from scipy.spatial.distance import squareform, pdist
 
+#wordcloud imports
+import pandas as pd
+from collections import Counter
+import re
+from collections import defaultdict
+from nltk.corpus import stopwords
+import nltk
+import operator
+
 blueprint = Blueprint('public', __name__, static_folder='../static')
+
+def take(n, iterable):
+    "Return first n items of the iterable as a list"
+    return list(islice(iterable, n))
+
+
+gag_list=["EX","RP","TO","VB","WP","PRP","DT","VBP","IN","POS",".","CD","``"]
+
+def split_sentence(text):
+    sentence=nltk.word_tokenize(text)
+    tagged = nltk.pos_tag(sentence)
+    tagged=[tag for tag in tagged if tag[1] not in gag_list]
+    pass_list=[tag[0] for tag in tagged]
+    return pass_list
+
+
+
+
+def gen_dict(statement_text):
+    words=[split_sentence(sentence) for sentence in statement_text]
+    word_dict=defaultdict(int)
+    for word_list in words:
+        temp_dict=dict(Counter(word_list))
+        word_dict={**word_dict,**temp_dict}
+    return word_dict
 
 
 def nodes():
@@ -69,6 +103,17 @@ def edges():
 
 def make_data(nodes, points):
     pass
+
+
+#######################Word cloud#####################
+def word_cloud():
+    statements=mongo.db.statements
+    statement_text=statements_df['statement'].tolist()
+    wordcount=defaultdict(int)
+    word_dict=gen_dict(statement_text)
+    word_dict=dict(sorted(word_dict.items(), key=operator.itemgetter(1), reverse=True)[:100])
+    return word_cloud
+#####################################################
 
 
 
