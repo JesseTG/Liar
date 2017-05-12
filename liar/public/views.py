@@ -104,6 +104,8 @@ def build_data(points):
         node['y'] = point[1]
         node['radius'] = math.sqrt(node['numberOfRulings'])
 
+    return { n['_id'] : n for n in nodes}
+
 
 #######################Word cloud#####################
 def word_cloud():
@@ -114,10 +116,6 @@ def word_cloud():
     word_dict=dict(sorted(word_dict.items(), key=operator.itemgetter(1), reverse=True)[:100])
     return word_cloud
 #####################################################
-
-
-
-    return { n['_id'] : n for n in nodes}
 
 def compute_edges(nodes, combos):
     def make_edge(combo):
