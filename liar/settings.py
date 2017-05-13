@@ -23,6 +23,7 @@ class Config(object):
     DEBUG_TB_INTERCEPT_REDIRECTS = False
     CACHE_TYPE = 'simple'  # Can be "memcached", "redis", etc.
     TEMPLATES_AUTO_RELOAD = True
+    MONGO_URI = os.environ.get('MONGO_URI', "mongodb://localhost:27017/liar")
     SCHEDULER_JOBSTORES = {
         'default': MemoryJobStore()
     }
