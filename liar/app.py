@@ -9,7 +9,7 @@ from flask import Flask, render_template
 
 from liar import commands, public
 from liar.assets import assets
-from liar.extensions import cache, csrf_protect, debug_toolbar, mongo, scheduler
+from liar.extensions import cache, csrf_protect, debug_toolbar, mongo, scheduler, compress
 from liar.settings import ProdConfig
 
 
@@ -34,6 +34,10 @@ def create_app(config_object=ProdConfig):
 
 def register_extensions(app):
     """Register Flask extensions."""
+    compress.init_app(app)
+    # Must be first so it doesn't trip up the debug toolbar
+    # https://github.com/mgood/flask-debugtoolbar/issues/83
+
     assets.init_app(app)
     cache.init_app(app)
     csrf_protect.init_app(app)

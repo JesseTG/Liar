@@ -6,7 +6,9 @@ from flask_wtf.csrf import CSRFProtect
 from flask_pymongo import PyMongo
 from flask_apscheduler import APScheduler
 from apscheduler.schedulers.background import BackgroundScheduler
+from flask_compress import Compress
 
+compress = Compress()
 csrf_protect = CSRFProtect()
 cache = Cache()
 debug_toolbar = DebugToolbarExtension()
