@@ -1,3 +1,7 @@
+# App-Specific
+common.css
+common.js
+
 *.py[cod]
 
 # C extensions
