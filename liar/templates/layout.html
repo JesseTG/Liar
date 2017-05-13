@@ -30,14 +30,15 @@
 
     {% block body %}
 
-    <header>
+    <div id="title">
       <h1>Liar</h1>
       <h2 class="small">Are Politicians Fireproof?</h2>
-    </header>
+    </div>
+
     {% block content %}{% endblock %}
 
-    <footer>
-      <ul>
+    <div id="about">
+      <ul class="list-unstyled text-right">
         <li>
           Each circle is a topic on <a href="http://www.politifact.com" rel="external" target="_blank">Politifact</a>.
         </li>
@@ -45,14 +46,26 @@
           The bigger the circle, the more it's talked about.
         </li>
         <li>
-          The more red in the circle when you more over it, the more it's lied about.
+          The more red in the circle when you mouse over it, the more it's lied about.
+        </li>
+        <li>
+          Updates every six hours.
+        </li>
+        <li>
+          Only supported in Chrome for now.
+        </li>
+        <li>
+          <a href="https://github.com/JesseTG/Liar" target="_blank">Fork it on GitHub</a>
+        </li>
+        <li>
+          More coming soon.
         </li>
       </ul>
 
-      <p>
-        &copy; 2017 Jesse Talavera-Greenberg and Sharang Bhat
+      <p class="copyright text-right">
+        &copy; 2017 <a href="https://jessetg.github.io" target="_blank">Jesse Talavera-Greenberg</a> and Sharang Bhat
       </p>
-    </footer>
+    </div>
 
 
 

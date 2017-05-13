@@ -14,7 +14,7 @@ from nltk.corpus import stopwords
 import nltk
 
 from liar.utils import flash_errors
-from liar.extensions import cache
+from liar.extensions import cache, mongo
 from .. import queries
 
 import scipy
@@ -113,7 +113,7 @@ def word_cloud():
     statement_text=statements_df['statement'].tolist()
     wordcount=defaultdict(int)
     word_dict=gen_dict(statement_text)
-    word_dict=dict(sorted(word_dict.items(), key=operator.itemgetter(1), reverse=True)[:100])
+    word_dict=dict(sorted(word_dict.items(), key=operator.itemgetter(1), reverse=True))
     return word_cloud
 #####################################################
 

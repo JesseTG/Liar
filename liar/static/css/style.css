@@ -27,12 +27,12 @@ textarea {
   resize: vertical;
 }
 
-nav, header, footer {
+nav, header, footer, #title, #about {
   position: fixed;
 }
 
 circle.subject {
-  transition: fill 0.5s, transform 0.5s;
+  transition: fill 0.25s, transform 0.25s;
   transform-origin: center center;
   will-change: transform, fill;
 }
@@ -44,7 +44,7 @@ circle.subject:hover {
 line.edge {
   stroke-width: 0.05;
   stroke: black;
-  transition: stroke-width 0.5s;
+  transition: stroke-width 0.25s;
   will-change: stroke-width;
 }
 
@@ -52,9 +52,16 @@ line.edge {
   color: red;
 }
 
-header {
+#title {
   bottom: 0;
   left: 0;
+  margin: 1vh;
+}
+
+#about {
+  bottom: 0;
+  right: 0;
+  margin: 1vh;
 }
 
 .container-narrow{

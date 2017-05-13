@@ -44,7 +44,6 @@
       cy="{{ node.y }}"
       data-defaultfill="{{ gradient(node.normalizedAverageRuling) }}"
       r="{{ node.radius }}"
-      title="{{ n }}"
       fill="{{ gradient(node.normalizedAverageRuling) }}"
     >
       <title>{{ n }}</title>
@@ -52,5 +51,9 @@
   {% endfor %}
 </svg>
 
+<svg>
+  <metadata id="wordlist">
+  </metadata>
+</svg>
 {% endblock %}
 
