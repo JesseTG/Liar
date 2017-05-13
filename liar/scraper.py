@@ -172,15 +172,10 @@ def scrape():
     urls.difference_update(existing_urls)
 
     print("Scraping data")
-    scraped_statements = []
     with ThreadPoolExecutor() as executor:
         for data in executor.map(get_and_scrape_article, urls):
             if data is not None:
-                scraped_statements.append(data)
-
-        print("Inserting {0} statements into the database".format(len(data)))
-        if scraped_statements:
-            statements.insert_many(scraped_statements, False)
+                statements.insert_one(data)
 
     print("Creating indexes")
     statements.create_index([("subjects", ASCENDING)], background=True)
