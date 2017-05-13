@@ -170,6 +170,7 @@ def scrape():
             if data is not None:
                 scraped_statements.append(data)
 
+        print("Inserting {0} statements into the database".format(len(data)))
         if scraped_statements:
             statements.insert_many(scraped_statements, False)
 
