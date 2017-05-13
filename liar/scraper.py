@@ -54,11 +54,16 @@ def get_all_pages(num_pages):
 
 def get_all_article_urls(pages):
     urls = set()
+    i = 1
     for page in pages:
         soup = BeautifulSoup(page.text, 'lxml') # TODO: Handle failure
         links = soup.select(".statement__text a.link") # TODO: Handle failure
         full_links = tuple(map(lambda p: BASEURL.format(p['href']), links))
         urls.update(full_links) # TODO: Handle failure
+
+        if __debug__:
+            print("Parsed page {0}".format(i))
+            i = i + 1
 
     return urls
 
@@ -82,6 +87,9 @@ def get_and_scrape_article(url: str):
     try:
         response = requests.get(url)
         response.raise_for_status()
+
+        if __debug__:
+            print("Parsing {0}".format(url))
 
         article = BeautifulSoup(response.text, 'lxml')
 
